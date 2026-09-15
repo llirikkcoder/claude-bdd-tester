@@ -1,0 +1,91 @@
+# .bdd-config.yaml — starter template
+# Полная схема: ~/.claude/skills/bdd-tester/references/bdd-config.md
+# Раскомментируй нужный preset и удали остальные.
+
+# ═══════════════════════════════════════════════════════════════
+# PRESET A — Python + behave
+# ═══════════════════════════════════════════════════════════════
+
+stack: python
+driver: behave
+feature_dirs: ["features/"]
+step_dirs: ["features/steps/"]
+helper_dirs: ["features/helpers/"]
+source_globs: ["src/**/*.py"]
+ignore_globs: ["**/migrations/**", "**/vendor/**"]
+
+harness:
+  command: "behave {feature_path} --no-capture --format=progress3"
+  command_scenario: "behave {feature_path} -n \"{scenario_name}\""
+  timeout_sec: 300
+
+philosophy: |
+  - Declarative Given-When-Then. Никаких кликов/URL/полей формы в тексте сценария.
+  - Одна поведенческая единица на сценарий.
+  - Конкретные значения, не абстрактные.
+  - Background — только если общее для >=3 сценариев в feature.
+  - Implementer никогда не редактирует .feature или step defs, чтобы сделать зелёным.
+  - Моки — в environment.py hooks, никогда inline в step definitions.
+
+max_revisions: 3
+reviewer_threshold: 9
+max_goal_iterations: 8
+same_scenario_retry_limit: 3
+
+drift_thresholds:
+  significant_change_lines: 30
+  coverage_gap_severity: warning
+
+# ═══════════════════════════════════════════════════════════════
+# PRESET B — TS + Playwright-BDD (e2e веб-воронки)
+# ═══════════════════════════════════════════════════════════════
+#
+# stack: js
+# driver: playwright-bdd
+# feature_dirs: ["features/"]
+# step_dirs: ["features/steps/"]
+# source_globs: ["src/**/*.{ts,tsx}", "app/**/*.{ts,tsx}"]
+# ignore_globs: ["**/node_modules/**", "**/.next/**"]
+#
+# harness:
+#   command: "npx bddgen && npx playwright test {feature_path}"
+#   command_scenario: "npx bddgen && npx playwright test {feature_path} -g \"{scenario_name}\""
+#   timeout_sec: 600
+#   parallel: true
+#
+# philosophy: |
+#   - Query by role/name/label, никогда getByTestId
+#   - userEvent, не fireEvent
+#   - Waits — явные, никаких waitForTimeout
+#   - Все URL в page objects, не в сценариях
+#
+# max_revisions: 3
+# reviewer_threshold: 9
+# max_goal_iterations: 8
+
+# ═══════════════════════════════════════════════════════════════
+# PRESET C — Event-driven (Абдуллин, для >100 сценариев)
+# ═══════════════════════════════════════════════════════════════
+#
+# stack: python
+# driver: event-driven
+# feature_dirs: ["scenarios/"]
+# step_dirs: []
+# helper_dirs: ["scenarios/helpers/"]
+# source_globs: ["src/**/*.py"]
+#
+# event_driven:
+#   event_store: "src/events/store.py"
+#   runner: "python -m scenarios.runner {feature_path}"
+#   scenario_module_pattern: "*_scenario.py"
+#   serializer: "json"
+#
+# harness:
+#   command: "python -m scenarios.runner {feature_path}"
+#   command_scenario: "python -m scenarios.runner {feature_path}::{scenario_name}"
+#
+# philosophy: |
+#   - Сценарий = @scenario-декорированная функция с given/when/then
+#   - Given = список событий (dataclass), When = одна команда, Then = ожидаемые события
+#   - Строгое равенство then_events == resulting_events (порядок важен если явно указан)
+#   - Продакту показываем сгенерированный .md, .py — источник истины
